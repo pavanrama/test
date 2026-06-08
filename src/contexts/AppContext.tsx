@@ -4,9 +4,9 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import type {
   AppData, Company, User, Account, Invoice, Bill,
   Contact, Expense, BankAccount, BankTransaction,
-  JournalEntry, TaxRate
+  JournalEntry, TaxRate, Employee, PayRun, PayrollTaxPayment
 } from '@/lib/types';
-import { uid, todayISO, DEFAULT_ACCOUNTS } from '@/lib/utils';
+import { uid, todayISO, DEFAULT_ACCOUNTS, PAYROLL_ACCOUNTS } from '@/lib/utils';
 
 const STORAGE_KEY = 'bookkeeper_data';
 
@@ -20,7 +20,7 @@ function loadData(): AppData {
 }
 
 function emptyData(): AppData {
-  return { companies: [], users: [], accounts: [], invoices: [], bills: [], contacts: [], expenses: [], bankAccounts: [], bankTransactions: [], journalEntries: [], taxRates: [] };
+  return { companies: [], users: [], accounts: [], invoices: [], bills: [], contacts: [], expenses: [], bankAccounts: [], bankTransactions: [], journalEntries: [], taxRates: [], employees: [], payRuns: [], payrollTaxPayments: [] };
 }
 
 function seedData(): AppData {
@@ -69,11 +69,23 @@ interface AppContextType {
   addTaxRate: (t: Omit<TaxRate, 'id' | 'companyId'>) => void;
   updateTaxRate: (id: string, updates: Partial<TaxRate>) => void;
   deleteTaxRate: (id: string) => void;
+  addEmployee: (e: Omit<Employee, 'id' | 'companyId' | 'createdAt'>) => void;
+  updateEmployee: (id: string, updates: Partial<Employee>) => void;
+  deleteEmployee: (id: string) => void;
+  addPayRun: (p: Omit<PayRun, 'id' | 'companyId' | 'createdAt'>) => void;
+  updatePayRun: (id: string, updates: Partial<PayRun>) => void;
+  deletePayRun: (id: string) => void;
+  addPayrollTaxPayment: (p: Omit<PayrollTaxPayment, 'id' | 'companyId' | 'createdAt'>) => void;
+  updatePayrollTaxPayment: (id: string, updates: Partial<PayrollTaxPayment>) => void;
+  deletePayrollTaxPayment: (id: string) => void;
   updateCompany: (id: string, updates: Partial<Company>) => void;
   addUser: (u: Omit<User, 'id' | 'createdAt'>) => void;
   updateUser: (id: string, updates: Partial<User>) => void;
   deleteUser: (id: string) => void;
   // Scoped getters
+  myEmployees: () => Employee[];
+  myPayRuns: () => PayRun[];
+  myPayrollTaxPayments: () => PayrollTaxPayment[];
   myAccounts: () => Account[];
   myInvoices: () => Invoice[];
   myBills: () => Bill[];
@@ -146,7 +158,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       id: uid(), companyId, name: admin.name, email: admin.email,
       password: admin.password, role: 'admin', isActive: true, createdAt: todayISO(),
     };
-    const defaultAccounts: Account[] = DEFAULT_ACCOUNTS.map(a => ({
+    const allDefaultAccounts = [...DEFAULT_ACCOUNTS, ...PAYROLL_ACCOUNTS];
+    const defaultAccounts: Account[] = allDefaultAccounts.map(a => ({
       id: uid(), companyId, code: a.code, name: a.name, type: a.type,
       subType: a.subType, balance: 0, currency: companyData.baseCurrency || 'USD',
       description: a.description, isActive: true,
@@ -211,10 +224,22 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     addTaxRate: (t) => addEntity('taxRates', { ...t, id: uid(), companyId: cid } as TaxRate),
     updateTaxRate: (id, u) => updateEntity('taxRates', id, u),
     deleteTaxRate: (id) => deleteEntity('taxRates', id),
+    addEmployee: (e) => addEntity('employees', { ...e, id: uid(), companyId: cid, createdAt: todayISO() } as Employee),
+    updateEmployee: (id, u) => updateEntity('employees', id, u),
+    deleteEmployee: (id) => deleteEntity('employees', id),
+    addPayRun: (p) => addEntity('payRuns', { ...p, id: uid(), companyId: cid, createdAt: todayISO() } as PayRun),
+    updatePayRun: (id, u) => updateEntity('payRuns', id, u),
+    deletePayRun: (id) => deleteEntity('payRuns', id),
+    addPayrollTaxPayment: (p) => addEntity('payrollTaxPayments', { ...p, id: uid(), companyId: cid, createdAt: todayISO() } as PayrollTaxPayment),
+    updatePayrollTaxPayment: (id, u) => updateEntity('payrollTaxPayments', id, u),
+    deletePayrollTaxPayment: (id) => deleteEntity('payrollTaxPayments', id),
     updateCompany: (id, u) => updateEntity('companies', id, u),
     addUser: (u) => addEntity('users', { ...u, id: uid(), createdAt: todayISO() } as User),
     updateUser: (id, u) => updateEntity('users', id, u),
     deleteUser: (id) => deleteEntity('users', id),
+    myEmployees: () => data.employees.filter(e => e.companyId === cid),
+    myPayRuns: () => data.payRuns.filter(p => p.companyId === cid),
+    myPayrollTaxPayments: () => data.payrollTaxPayments.filter(p => p.companyId === cid),
     myAccounts: () => data.accounts.filter(a => a.companyId === cid),
     myInvoices: () => data.invoices.filter(i => i.companyId === cid),
     myBills: () => data.bills.filter(b => b.companyId === cid),

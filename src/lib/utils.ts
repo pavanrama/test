@@ -51,6 +51,44 @@ export function statusColor(status: string): string {
   return map[status] || 'bg-gray-100 text-gray-600';
 }
 
+export const PAYROLL_TAX_RATES = {
+  socialSecurity: 0.062,
+  medicare: 0.0145,
+  federalUnemployment: 0.006,
+  stateUnemployment: 0.027,
+  ssWageBase: 168600,
+  futaWageBase: 7000,
+};
+
+export const PAYROLL_ACCOUNTS = [
+  { code: '6010', name: 'Payroll Tax Expense', type: 'expense' as const, subType: 'Operating Expense', description: 'Employer payroll taxes' },
+  { code: '2310', name: 'Federal Payroll Tax Payable', type: 'liability' as const, subType: 'Current Liability', description: 'Federal withholding + employer FICA' },
+  { code: '2320', name: 'State Payroll Tax Payable', type: 'liability' as const, subType: 'Current Liability', description: 'State withholding + SUI' },
+  { code: '2330', name: 'FUTA Payable', type: 'liability' as const, subType: 'Current Liability', description: 'Federal unemployment tax' },
+  { code: '2340', name: 'SUTA Payable', type: 'liability' as const, subType: 'Current Liability', description: 'State unemployment tax' },
+];
+
+export function calcFederalIncomeTax(gross: number, filing: string): number {
+  const annual = gross * 26;
+  let tax = 0;
+  if (filing === 'single') {
+    if (annual <= 11600) tax = annual * 0.10;
+    else if (annual <= 47150) tax = 1160 + (annual - 11600) * 0.12;
+    else if (annual <= 100525) tax = 5426.60 + (annual - 47150) * 0.22;
+    else tax = 17168.50 + (annual - 100525) * 0.24;
+  } else {
+    if (annual <= 23200) tax = annual * 0.10;
+    else if (annual <= 94300) tax = 2320 + (annual - 23200) * 0.12;
+    else if (annual <= 201050) tax = 10852 + (annual - 94300) * 0.22;
+    else tax = 34337 + (annual - 201050) * 0.24;
+  }
+  return Math.round((tax / 26) * 100) / 100;
+}
+
+export function calcStateIncomeTax(gross: number): number {
+  return Math.round(gross * 0.05 * 100) / 100;
+}
+
 export const DEFAULT_ACCOUNTS = [
   { code: '1000', name: 'Cash', type: 'asset' as const, subType: 'Current Asset', description: 'Main cash account' },
   { code: '1100', name: 'Accounts Receivable', type: 'asset' as const, subType: 'Current Asset', description: 'Trade receivables' },

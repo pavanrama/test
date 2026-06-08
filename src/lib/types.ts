@@ -185,6 +185,66 @@ export interface Currency {
   isBase: boolean;
 }
 
+export interface Employee {
+  id: string;
+  companyId: string;
+  name: string;
+  email: string;
+  ssn: string;
+  filingStatus: 'single' | 'married' | 'head_of_household';
+  allowances: number;
+  payType: 'salary' | 'hourly';
+  payRate: number;
+  state: string;
+  startDate: string;
+  isActive: boolean;
+  createdAt: string;
+}
+
+export interface PayRun {
+  id: string;
+  companyId: string;
+  payPeriodStart: string;
+  payPeriodEnd: string;
+  payDate: string;
+  status: 'draft' | 'processed' | 'paid';
+  entries: PayRunEntry[];
+  createdAt: string;
+}
+
+export interface PayRunEntry {
+  employeeId: string;
+  employeeName: string;
+  hoursWorked: number;
+  grossPay: number;
+  federalIncomeTax: number;
+  stateIncomeTax: number;
+  employeeSS: number;
+  employeeMedicare: number;
+  employerSS: number;
+  employerMedicare: number;
+  futa: number;
+  suta: number;
+  totalEmployeeTax: number;
+  totalEmployerTax: number;
+  netPay: number;
+  totalEmployerCost: number;
+}
+
+export interface PayrollTaxPayment {
+  id: string;
+  companyId: string;
+  type: 'federal_941' | 'futa_940' | 'suta';
+  quarter: string;
+  year: number;
+  amount: number;
+  dueDate: string;
+  status: 'unpaid' | 'paid';
+  paidDate?: string;
+  state?: string;
+  createdAt: string;
+}
+
 export interface AppData {
   companies: Company[];
   users: User[];
@@ -197,4 +257,7 @@ export interface AppData {
   bankTransactions: BankTransaction[];
   journalEntries: JournalEntry[];
   taxRates: TaxRate[];
+  employees: Employee[];
+  payRuns: PayRun[];
+  payrollTaxPayments: PayrollTaxPayment[];
 }
