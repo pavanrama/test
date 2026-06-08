@@ -1,0 +1,275 @@
+// Ledgerly — double-entry bookkeeping & accounting schema
+// Datasource: SQLite for zero-config local development.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Identity & organisation
+// ---------------------------------------------------------------------------
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String
+  passwordHash String
+  role         String   @default("OWNER") // OWNER | ADMIN | ACCOUNTANT | VIEWER
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Organization {
+  id             String   @id @default(cuid())
+  name           String   @default("My Company")
+  legalName      String?
+  email          String?
+  phone          String?
+  website        String?
+  address        String?
+  taxNumber      String?
+  currency       String   @default("USD")
+  currencySymbol String   @default("$")
+  fiscalYearStart Int     @default(1) // month 1-12
+  invoicePrefix  String   @default("INV-")
+  billPrefix     String   @default("BILL-")
+  invoiceCounter Int      @default(1)
+  billCounter    Int      @default(1)
+  logoUrl        String?
+  defaultTaxRate Float    @default(0)
+  invoiceTerms   String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+// ---------------------------------------------------------------------------
+// Chart of accounts & general ledger
+// ---------------------------------------------------------------------------
+
+model Account {
+  id          String   @id @default(cuid())
+  code        String   @unique
+  name        String
+  type        String // ASSET | LIABILITY | EQUITY | INCOME | EXPENSE
+  subtype     String? // e.g. CASH, ACCOUNTS_RECEIVABLE, COGS ...
+  description String?
+  isActive    Boolean  @default(true)
+  isSystem    Boolean  @default(false) // protected accounts used by automation
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  lines             JournalLine[]
+  productsIncome    Product[]     @relation("ProductIncomeAccount")
+  productsExpense   Product[]     @relation("ProductExpenseAccount")
+  invoiceDeposits   Payment[]     @relation("PaymentDepositAccount")
+}
+
+model JournalEntry {
+  id        String   @id @default(cuid())
+  date      DateTime
+  memo      String?
+  reference String?
+  source    String   @default("MANUAL") // MANUAL | INVOICE | BILL | PAYMENT
+  sourceId  String?
+  posted    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  lines JournalLine[]
+}
+
+model JournalLine {
+  id             String       @id @default(cuid())
+  journalEntry   JournalEntry @relation(fields: [journalEntryId], references: [id], onDelete: Cascade)
+  journalEntryId String
+  account        Account      @relation(fields: [accountId], references: [id])
+  accountId      String
+  description    String?
+  debit          Float        @default(0)
+  credit         Float        @default(0)
+
+  @@index([accountId])
+  @@index([journalEntryId])
+}
+
+// ---------------------------------------------------------------------------
+// Contacts
+// ---------------------------------------------------------------------------
+
+model Customer {
+  id        String   @id @default(cuid())
+  name      String
+  email     String?
+  phone     String?
+  company   String?
+  address   String?
+  taxNumber String?
+  notes     String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  invoices Invoice[]
+  payments Payment[]
+}
+
+model Vendor {
+  id        String   @id @default(cuid())
+  name      String
+  email     String?
+  phone     String?
+  company   String?
+  address   String?
+  taxNumber String?
+  notes     String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  bills    Bill[]
+  payments Payment[]
+}
+
+// ---------------------------------------------------------------------------
+// Products & services
+// ---------------------------------------------------------------------------
+
+model Product {
+  id              String   @id @default(cuid())
+  name            String
+  sku             String?
+  description     String?
+  type            String   @default("SERVICE") // SERVICE | INVENTORY
+  price           Float    @default(0)
+  cost            Float    @default(0)
+  taxRate         Float    @default(0)
+  isActive        Boolean  @default(true)
+  incomeAccount   Account? @relation("ProductIncomeAccount", fields: [incomeAccountId], references: [id])
+  incomeAccountId String?
+  expenseAccount  Account? @relation("ProductExpenseAccount", fields: [expenseAccountId], references: [id])
+  expenseAccountId String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  invoiceLines InvoiceLine[]
+  billLines    BillLine[]
+}
+
+// ---------------------------------------------------------------------------
+// Sales — invoices
+// ---------------------------------------------------------------------------
+
+model Invoice {
+  id         String   @id @default(cuid())
+  number     String   @unique
+  customer   Customer @relation(fields: [customerId], references: [id])
+  customerId String
+  issueDate  DateTime
+  dueDate    DateTime
+  status     String   @default("DRAFT") // DRAFT | SENT | PARTIAL | PAID | OVERDUE | VOID
+  notes      String?
+  terms      String?
+  subtotal   Float    @default(0)
+  taxTotal   Float    @default(0)
+  total      Float    @default(0)
+  amountPaid Float    @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  lines    InvoiceLine[]
+  payments Payment[]
+
+  @@index([customerId])
+  @@index([status])
+}
+
+model InvoiceLine {
+  id          String   @id @default(cuid())
+  invoice     Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  invoiceId   String
+  product     Product? @relation(fields: [productId], references: [id])
+  productId   String?
+  description String
+  quantity    Float    @default(1)
+  unitPrice   Float    @default(0)
+  taxRate     Float    @default(0)
+  amount      Float    @default(0)
+
+  @@index([invoiceId])
+}
+
+// ---------------------------------------------------------------------------
+// Purchases — bills / expenses
+// ---------------------------------------------------------------------------
+
+model Bill {
+  id         String   @id @default(cuid())
+  number     String   @unique
+  vendor     Vendor   @relation(fields: [vendorId], references: [id])
+  vendorId   String
+  issueDate  DateTime
+  dueDate    DateTime
+  status     String   @default("OPEN") // OPEN | PARTIAL | PAID | OVERDUE | VOID
+  notes      String?
+  subtotal   Float    @default(0)
+  taxTotal   Float    @default(0)
+  total      Float    @default(0)
+  amountPaid Float    @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  lines    BillLine[]
+  payments Payment[]
+
+  @@index([vendorId])
+  @@index([status])
+}
+
+model BillLine {
+  id          String   @id @default(cuid())
+  bill        Bill     @relation(fields: [billId], references: [id], onDelete: Cascade)
+  billId      String
+  product     Product? @relation(fields: [productId], references: [id])
+  productId   String?
+  accountId   String? // expense account override
+  description String
+  quantity    Float    @default(1)
+  unitPrice   Float    @default(0)
+  taxRate     Float    @default(0)
+  amount      Float    @default(0)
+
+  @@index([billId])
+}
+
+// ---------------------------------------------------------------------------
+// Payments (money in / money out)
+// ---------------------------------------------------------------------------
+
+model Payment {
+  id               String    @id @default(cuid())
+  type             String // RECEIVED | PAID
+  date             DateTime
+  amount           Float
+  method           String    @default("BANK") // BANK | CASH | CARD | OTHER
+  reference        String?
+  notes            String?
+  depositAccount   Account?  @relation("PaymentDepositAccount", fields: [depositAccountId], references: [id])
+  depositAccountId String?
+  customer         Customer? @relation(fields: [customerId], references: [id])
+  customerId       String?
+  vendor           Vendor?   @relation(fields: [vendorId], references: [id])
+  vendorId         String?
+  invoice          Invoice?  @relation(fields: [invoiceId], references: [id])
+  invoiceId        String?
+  bill             Bill?     @relation(fields: [billId], references: [id])
+  billId           String?
+  createdAt        DateTime  @default(now())
+
+  @@index([invoiceId])
+  @@index([billId])
+}
