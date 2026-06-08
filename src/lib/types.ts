@@ -1,5 +1,37 @@
+export interface Company {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  address: string;
+  city: string;
+  state: string;
+  country: string;
+  zipCode: string;
+  taxId: string;
+  industry: string;
+  baseCurrency: string;
+  fiscalYearStart: string;
+  plan: 'free' | 'starter' | 'professional' | 'enterprise';
+  isActive: boolean;
+  createdAt: string;
+  logo?: string;
+}
+
+export interface User {
+  id: string;
+  companyId: string;
+  name: string;
+  email: string;
+  password: string;
+  role: 'super_admin' | 'admin' | 'accountant' | 'viewer';
+  isActive: boolean;
+  createdAt: string;
+}
+
 export interface Account {
   id: string;
+  companyId: string;
   code: string;
   name: string;
   type: 'asset' | 'liability' | 'equity' | 'revenue' | 'expense';
@@ -8,21 +40,124 @@ export interface Account {
   currency: string;
   description: string;
   isActive: boolean;
-  parentId?: string;
-  children?: Account[];
 }
 
-export interface Transaction {
+export interface Invoice {
   id: string;
+  companyId: string;
+  number: string;
+  contactId: string;
+  contactName: string;
+  date: string;
+  dueDate: string;
+  items: LineItem[];
+  subtotal: number;
+  taxRate: number;
+  taxAmount: number;
+  total: number;
+  amountPaid: number;
+  status: 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled';
+  notes: string;
+  currency: string;
+  createdAt: string;
+}
+
+export interface Bill {
+  id: string;
+  companyId: string;
+  number: string;
+  contactId: string;
+  contactName: string;
+  date: string;
+  dueDate: string;
+  items: LineItem[];
+  subtotal: number;
+  taxAmount: number;
+  total: number;
+  amountPaid: number;
+  status: 'draft' | 'received' | 'approved' | 'paid' | 'overdue';
+  category: string;
+  currency: string;
+  createdAt: string;
+}
+
+export interface LineItem {
+  id: string;
+  description: string;
+  quantity: number;
+  unitPrice: number;
+  amount: number;
+}
+
+export interface Contact {
+  id: string;
+  companyId: string;
+  name: string;
+  email: string;
+  phone: string;
+  type: 'customer' | 'vendor' | 'both';
+  company: string;
+  address: string;
+  city: string;
+  country: string;
+  taxId: string;
+  currency: string;
+  notes: string;
+  isActive: boolean;
+  createdAt: string;
+}
+
+export interface Expense {
+  id: string;
+  companyId: string;
+  date: string;
+  vendor: string;
+  category: string;
+  description: string;
+  amount: number;
+  taxAmount: number;
+  paymentMethod: string;
+  status: 'pending' | 'approved' | 'rejected';
+  currency: string;
+  createdAt: string;
+}
+
+export interface BankAccount {
+  id: string;
+  companyId: string;
+  name: string;
+  accountNumber: string;
+  bankName: string;
+  balance: number;
+  currency: string;
+  type: 'checking' | 'savings' | 'credit_card';
+  isConnected: boolean;
+}
+
+export interface BankTransaction {
+  id: string;
+  companyId: string;
+  bankAccountId: string;
+  date: string;
+  description: string;
+  amount: number;
+  type: 'debit' | 'credit';
+  category: string;
+  isReconciled: boolean;
+}
+
+export interface JournalEntry {
+  id: string;
+  companyId: string;
   date: string;
   description: string;
   reference: string;
-  entries: JournalEntry[];
+  lines: JournalLine[];
   status: 'draft' | 'posted' | 'void';
   createdAt: string;
 }
 
-export interface JournalEntry {
+export interface JournalLine {
   id: string;
   accountId: string;
   accountName: string;
@@ -31,120 +166,9 @@ export interface JournalEntry {
   description: string;
 }
 
-export interface Invoice {
-  id: string;
-  number: string;
-  customerId: string;
-  customerName: string;
-  date: string;
-  dueDate: string;
-  items: InvoiceItem[];
-  subtotal: number;
-  taxRate: number;
-  taxAmount: number;
-  total: number;
-  amountPaid: number;
-  status: 'draft' | 'sent' | 'viewed' | 'paid' | 'overdue' | 'cancelled';
-  notes: string;
-  currency: string;
-}
-
-export interface InvoiceItem {
-  id: string;
-  description: string;
-  quantity: number;
-  unitPrice: number;
-  taxRate: number;
-  amount: number;
-}
-
-export interface Bill {
-  id: string;
-  number: string;
-  vendorId: string;
-  vendorName: string;
-  date: string;
-  dueDate: string;
-  items: BillItem[];
-  subtotal: number;
-  taxAmount: number;
-  total: number;
-  amountPaid: number;
-  status: 'draft' | 'received' | 'approved' | 'paid' | 'overdue';
-  category: string;
-  currency: string;
-}
-
-export interface BillItem {
-  id: string;
-  description: string;
-  quantity: number;
-  unitPrice: number;
-  accountId: string;
-  amount: number;
-}
-
-export interface Contact {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
-  type: 'customer' | 'vendor' | 'both';
-  company: string;
-  address: string;
-  city: string;
-  state: string;
-  country: string;
-  zipCode: string;
-  taxId: string;
-  balance: number;
-  currency: string;
-  notes: string;
-  isActive: boolean;
-  createdAt: string;
-}
-
-export interface BankAccount {
-  id: string;
-  name: string;
-  accountNumber: string;
-  bankName: string;
-  balance: number;
-  currency: string;
-  type: 'checking' | 'savings' | 'credit_card';
-  lastReconciled: string;
-  isConnected: boolean;
-}
-
-export interface BankTransaction {
-  id: string;
-  bankAccountId: string;
-  date: string;
-  description: string;
-  amount: number;
-  type: 'debit' | 'credit';
-  category: string;
-  isReconciled: boolean;
-  matchedTransactionId?: string;
-}
-
-export interface Expense {
-  id: string;
-  date: string;
-  vendorName: string;
-  category: string;
-  description: string;
-  amount: number;
-  taxAmount: number;
-  accountId: string;
-  paymentMethod: string;
-  receiptUrl?: string;
-  status: 'pending' | 'approved' | 'rejected';
-  currency: string;
-}
-
 export interface TaxRate {
   id: string;
+  companyId: string;
   name: string;
   rate: number;
   type: 'sales_tax' | 'vat' | 'gst';
@@ -161,46 +185,16 @@ export interface Currency {
   isBase: boolean;
 }
 
-export interface CompanySettings {
-  name: string;
-  email: string;
-  phone: string;
-  address: string;
-  city: string;
-  state: string;
-  country: string;
-  zipCode: string;
-  taxId: string;
-  fiscalYearStart: string;
-  baseCurrency: string;
-  logo?: string;
-  industry: string;
+export interface AppData {
+  companies: Company[];
+  users: User[];
+  accounts: Account[];
+  invoices: Invoice[];
+  bills: Bill[];
+  contacts: Contact[];
+  expenses: Expense[];
+  bankAccounts: BankAccount[];
+  bankTransactions: BankTransaction[];
+  journalEntries: JournalEntry[];
+  taxRates: TaxRate[];
 }
-
-export interface ReportData {
-  title: string;
-  period: string;
-  sections: ReportSection[];
-  total?: number;
-}
-
-export interface ReportSection {
-  name: string;
-  items: ReportItem[];
-  total: number;
-}
-
-export interface ReportItem {
-  name: string;
-  amount: number;
-  previousAmount?: number;
-  children?: ReportItem[];
-}
-
-export type NavigationItem = {
-  name: string;
-  href: string;
-  icon: string;
-  badge?: number;
-  children?: NavigationItem[];
-};
