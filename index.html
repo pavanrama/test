@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="QuickClone — smart accounting software to manage money, send invoices, track expenses, run payroll, and get paid faster. A QuickBooks-inspired marketing site clone." />
+  <title>QuickClone — Accounting software for small business</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='16' fill='%232ca01c'/%3E%3Ctext x='16' y='22' font-size='18' font-family='Arial' font-weight='bold' fill='white' text-anchor='middle'%3Eqc%3C/text%3E%3C/svg%3E" />
+</head>
+<body>
+  <!-- Top utility bar -->
+  <div class="utility-bar">
+    <div class="container utility-bar__inner">
+      <span class="utility-bar__text">Limited time: 70% off QuickClone for 3 months*</span>
+      <a href="#pricing" class="utility-bar__link">See plans &amp; pricing &rarr;</a>
+    </div>
+  </div>
+
+  <!-- Header / Navigation -->
+  <header class="header" id="header">
+    <div class="container header__inner">
+      <a href="#" class="logo" aria-label="QuickClone home">
+        <span class="logo__mark" aria-hidden="true">
+          <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
+            <circle cx="16" cy="16" r="16" fill="#2ca01c" />
+            <path d="M16 7a9 9 0 0 0-2 17.78V27a1 1 0 0 0 2 0v-1.05a9 9 0 0 0 0-17.9V7z" fill="#fff" opacity="0"/>
+            <text x="16" y="22" font-size="16" font-family="Inter, Arial" font-weight="800" fill="#fff" text-anchor="middle">qc</text>
+          </svg>
+        </span>
+        <span class="logo__text">quick<strong>clone</strong></span>
+      </a>
+
+      <nav class="nav" id="primary-nav" aria-label="Primary">
+        <ul class="nav__list">
+          <li class="nav__item"><a href="#products" class="nav__link">Products</a></li>
+          <li class="nav__item"><a href="#features" class="nav__link">Features</a></li>
+          <li class="nav__item"><a href="#pricing" class="nav__link">Pricing</a></li>
+          <li class="nav__item"><a href="#resources" class="nav__link">Resources</a></li>
+          <li class="nav__item"><a href="#support" class="nav__link">Support</a></li>
+        </ul>
+      </nav>
+
+      <div class="header__actions">
+        <a href="#" class="btn btn--ghost">Sign in</a>
+        <a href="#pricing" class="btn btn--primary">Buy now</a>
+        <button class="nav-toggle" id="nav-toggle" aria-label="Toggle menu" aria-expanded="false" aria-controls="primary-nav">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- Hero -->
+    <section class="hero">
+      <div class="container hero__inner">
+        <div class="hero__content">
+          <p class="eyebrow">#1 accounting software for small business*</p>
+          <h1 class="hero__title">Smarter business<br />starts here</h1>
+          <p class="hero__subtitle">
+            Track income and expenses, send invoices, run payroll, and get paid faster —
+            all in one place. Join over 7 million businesses growing with QuickClone.
+          </p>
+          <div class="hero__cta">
+            <a href="#pricing" class="btn btn--primary btn--lg">See plans &amp; pricing</a>
+            <a href="#demo" class="btn btn--outline btn--lg">Try a free demo</a>
+          </div>
+          <p class="hero__note">Free 30-day trial. No credit card required. Cancel anytime.</p>
+        </div>
+
+        <div class="hero__visual">
+          <div class="dashboard-card">
+            <div class="dashboard-card__head">
+              <span class="dot dot--red"></span>
+              <span class="dot dot--amber"></span>
+              <span class="dot dot--green"></span>
+              <span class="dashboard-card__title">Dashboard</span>
+            </div>
+            <div class="dashboard-card__body">
+              <div class="stat">
+                <span class="stat__label">Profit &amp; loss</span>
+                <span class="stat__value">$48,920</span>
+                <span class="stat__delta stat__delta--up">&#9650; 12.4% this month</span>
+              </div>
+              <div class="bars" aria-hidden="true">
+                <span style="--h:40%"></span>
+                <span style="--h:65%"></span>
+                <span style="--h:50%"></span>
+                <span style="--h:80%"></span>
+                <span style="--h:60%"></span>
+                <span style="--h:95%"></span>
+                <span style="--h:75%"></span>
+              </div>
+              <div class="mini-stats">
+                <div class="mini-stat">
+                  <span class="mini-stat__label">Invoices</span>
+                  <span class="mini-stat__value">$12,300</span>
+                </div>
+                <div class="mini-stat">
+                  <span class="mini-stat__label">Expenses</span>
+                  <span class="mini-stat__value">$8,140</span>
+                </div>
+                <div class="mini-stat">
+                  <span class="mini-stat__label">Open</span>
+                  <span class="mini-stat__value">9</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Trust bar -->
+    <section class="trust">
+      <div class="container">
+        <p class="trust__label">Trusted by businesses and accountants everywhere</p>
+        <div class="trust__logos">
+          <span class="trust__logo">Northwind</span>
+          <span class="trust__logo">Acme Co.</span>
+          <span class="trust__logo">Globex</span>
+          <span class="trust__logo">Initech</span>
+          <span class="trust__logo">Umbrella</span>
+          <span class="trust__logo">Soylent</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Products -->
+    <section class="section" id="products">
+      <div class="container">
+        <header class="section__head">
+          <h2 class="section__title">One platform for all your finances</h2>
+          <p class="section__lead">Pick the tools you need today and add more as you grow.</p>
+        </header>
+
+        <div class="product-grid">
+          <article class="product-card">
+            <div class="product-card__icon" data-icon="invoice"></div>
+            <h3 class="product-card__title">Invoicing</h3>
+            <p class="product-card__text">Create custom invoices, accept online payments, and get paid up to 2x faster.</p>
+            <a href="#" class="link-arrow">Learn more</a>
+          </article>
+          <article class="product-card">
+            <div class="product-card__icon" data-icon="expenses"></div>
+            <h3 class="product-card__title">Expense tracking</h3>
+            <p class="product-card__text">Connect your bank and automatically sort transactions into the right categories.</p>
+            <a href="#" class="link-arrow">Learn more</a>
+          </article>
+          <article class="product-card">
+            <div class="product-card__icon" data-icon="payroll"></div>
+            <h3 class="product-card__title">Payroll</h3>
+            <p class="product-card__text">Run payroll in minutes and file your payroll taxes automatically.</p>
+            <a href="#" class="link-arrow">Learn more</a>
+          </article>
+          <article class="product-card">
+            <div class="product-card__icon" data-icon="reports"></div>
+            <h3 class="product-card__title">Reports</h3>
+            <p class="product-card__text">See profit &amp; loss, balance sheets, and cash flow in real time.</p>
+            <a href="#" class="link-arrow">Learn more</a>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- Feature highlight (alternating) -->
+    <section class="section section--alt" id="features">
+      <div class="container">
+        <div class="feature-row">
+          <div class="feature-row__media">
+            <div class="float-card">
+              <div class="float-card__row">
+                <span class="float-card__avatar">AR</span>
+                <div>
+                  <strong>Invoice #1042</strong>
+                  <span class="float-card__sub">Paid &middot; $2,400.00</span>
+                </div>
+                <span class="badge badge--green">Paid</span>
+              </div>
+              <div class="float-card__row">
+                <span class="float-card__avatar">BL</span>
+                <div>
+                  <strong>Invoice #1043</strong>
+                  <span class="float-card__sub">Sent &middot; $980.00</span>
+                </div>
+                <span class="badge badge--amber">Due</span>
+              </div>
+            </div>
+          </div>
+          <div class="feature-row__content">
+            <p class="eyebrow eyebrow--green">Get paid faster</p>
+            <h2 class="feature-row__title">Send invoices and receive payments online</h2>
+            <p class="feature-row__text">
+              Professional invoices with your logo, automatic reminders, and built-in
+              card and bank transfer payments. Watch your cash flow improve.
+            </p>
+            <ul class="check-list">
+              <li>Accept cards, ACH, and digital wallets</li>
+              <li>Automatic payment reminders</li>
+              <li>Recurring invoices on autopilot</li>
+            </ul>
+            <a href="#pricing" class="btn btn--primary">Start invoicing</a>
+          </div>
+        </div>
+
+        <div class="feature-row feature-row--reverse">
+          <div class="feature-row__media">
+            <div class="float-card">
+              <div class="stat">
+                <span class="stat__label">Cash flow forecast</span>
+                <span class="stat__value">$24,580</span>
+                <span class="stat__delta stat__delta--up">&#9650; On track</span>
+              </div>
+              <div class="line-chart" aria-hidden="true">
+                <svg viewBox="0 0 300 100" preserveAspectRatio="none">
+                  <polyline fill="none" stroke="#2ca01c" stroke-width="3"
+                    points="0,80 50,60 100,68 150,40 200,46 250,20 300,28" />
+                </svg>
+              </div>
+            </div>
+          </div>
+          <div class="feature-row__content">
+            <p class="eyebrow eyebrow--green">Stay in control</p>
+            <h2 class="feature-row__title">Know where your money goes</h2>
+            <p class="feature-row__text">
+              Connect your accounts and let QuickClone categorize transactions for you.
+              Get a clear picture of your income, expenses, and what's next.
+            </p>
+            <ul class="check-list">
+              <li>Automatic bank reconciliation</li>
+              <li>Real-time cash flow insights</li>
+              <li>Tax-ready reports at a click</li>
+            </ul>
+            <a href="#pricing" class="btn btn--primary">Track expenses</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Stats band -->
+    <section class="stats-band">
+      <div class="container stats-band__inner">
+        <div class="stats-band__item">
+          <span class="stats-band__num">7M+</span>
+          <span class="stats-band__label">Businesses served</span>
+        </div>
+        <div class="stats-band__item">
+          <span class="stats-band__num">$0</span>
+          <span class="stats-band__label">To get started</span>
+        </div>
+        <div class="stats-band__item">
+          <span class="stats-band__num">2x</span>
+          <span class="stats-band__label">Faster payments</span>
+        </div>
+        <div class="stats-band__item">
+          <span class="stats-band__num">4.8/5</span>
+          <span class="stats-band__label">Average rating</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Pricing -->
+    <section class="section" id="pricing">
+      <div class="container">
+        <header class="section__head">
+          <h2 class="section__title">Plans for businesses of every size</h2>
+          <p class="section__lead">Switch or cancel anytime. All plans include a 30-day free trial.</p>
+        </header>
+
+        <div class="pricing-grid">
+          <article class="price-card">
+            <h3 class="price-card__name">Simple Start</h3>
+            <p class="price-card__desc">For new businesses getting organized.</p>
+            <p class="price-card__price"><span class="price-card__currency">$</span>15<span class="price-card__period">/mo</span></p>
+            <a href="#" class="btn btn--outline btn--block">Choose plan</a>
+            <ul class="price-card__features">
+              <li>Track income &amp; expenses</li>
+              <li>Send unlimited invoices</li>
+              <li>1 user + your accountant</li>
+              <li>Basic reports</li>
+            </ul>
+          </article>
+
+          <article class="price-card price-card--featured">
+            <span class="price-card__tag">Most popular</span>
+            <h3 class="price-card__name">Plus</h3>
+            <p class="price-card__desc">For growing teams that need more.</p>
+            <p class="price-card__price"><span class="price-card__currency">$</span>45<span class="price-card__period">/mo</span></p>
+            <a href="#" class="btn btn--primary btn--block">Choose plan</a>
+            <ul class="price-card__features">
+              <li>Everything in Simple Start</li>
+              <li>Manage bills &amp; payments</li>
+              <li>Track inventory &amp; projects</li>
+              <li>Up to 5 users</li>
+            </ul>
+          </article>
+
+          <article class="price-card">
+            <h3 class="price-card__name">Advanced</h3>
+            <p class="price-card__desc">For established businesses scaling up.</p>
+            <p class="price-card__price"><span class="price-card__currency">$</span>100<span class="price-card__period">/mo</span></p>
+            <a href="#" class="btn btn--outline btn--block">Choose plan</a>
+            <ul class="price-card__features">
+              <li>Everything in Plus</li>
+              <li>Custom reports &amp; insights</li>
+              <li>Dedicated account manager</li>
+              <li>Up to 25 users</li>
+            </ul>
+          </article>
+        </div>
+        <p class="pricing-note">*Offer terms apply. Prices shown are illustrative for this demo clone.</p>
+      </div>
+    </section>
+
+    <!-- Testimonials -->
+    <section class="section section--alt" id="resources">
+      <div class="container">
+        <header class="section__head">
+          <h2 class="section__title">Loved by business owners</h2>
+          <p class="section__lead">See why teams switch to QuickClone and never look back.</p>
+        </header>
+        <div class="testimonial-grid">
+          <figure class="testimonial">
+            <div class="testimonial__stars" aria-label="5 out of 5 stars">★★★★★</div>
+            <blockquote>"I cut my bookkeeping time in half. Invoices, expenses, and taxes are finally under control."</blockquote>
+            <figcaption><strong>Maria L.</strong> — Studio owner</figcaption>
+          </figure>
+          <figure class="testimonial">
+            <div class="testimonial__stars" aria-label="5 out of 5 stars">★★★★★</div>
+            <blockquote>"Payroll used to be stressful. Now it takes a few clicks and the taxes are handled for me."</blockquote>
+            <figcaption><strong>James T.</strong> — Café founder</figcaption>
+          </figure>
+          <figure class="testimonial">
+            <div class="testimonial__stars" aria-label="5 out of 5 stars">★★★★★</div>
+            <blockquote>"The real-time reports help me make decisions fast. It's like having a CFO in my pocket."</blockquote>
+            <figcaption><strong>Priya S.</strong> — Agency director</figcaption>
+          </figure>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="cta" id="support">
+      <div class="container cta__inner">
+        <h2 class="cta__title">Ready to run your business with confidence?</h2>
+        <p class="cta__text">Start your free 30-day trial today. No credit card required.</p>
+        <div class="cta__actions">
+          <a href="#pricing" class="btn btn--primary btn--lg">See plans &amp; pricing</a>
+          <a href="#demo" class="btn btn--outline-light btn--lg">Talk to sales</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container footer__inner">
+      <div class="footer__brand">
+        <a href="#" class="logo logo--footer">
+          <span class="logo__text">quick<strong>clone</strong></span>
+        </a>
+        <p class="footer__tagline">Smart accounting software for small businesses.</p>
+      </div>
+
+      <div class="footer__cols">
+        <div class="footer__col">
+          <h4 class="footer__heading">Products</h4>
+          <ul>
+            <li><a href="#products">Invoicing</a></li>
+            <li><a href="#products">Expense tracking</a></li>
+            <li><a href="#products">Payroll</a></li>
+            <li><a href="#products">Reports</a></li>
+          </ul>
+        </div>
+        <div class="footer__col">
+          <h4 class="footer__heading">Company</h4>
+          <ul>
+            <li><a href="#">About</a></li>
+            <li><a href="#">Careers</a></li>
+            <li><a href="#">Press</a></li>
+            <li><a href="#">Partners</a></li>
+          </ul>
+        </div>
+        <div class="footer__col">
+          <h4 class="footer__heading">Resources</h4>
+          <ul>
+            <li><a href="#resources">Blog</a></li>
+            <li><a href="#support">Support</a></li>
+            <li><a href="#">Community</a></li>
+            <li><a href="#">Guides</a></li>
+          </ul>
+        </div>
+        <div class="footer__col">
+          <h4 class="footer__heading">Legal</h4>
+          <ul>
+            <li><a href="#">Privacy</a></li>
+            <li><a href="#">Terms</a></li>
+            <li><a href="#">Security</a></li>
+            <li><a href="#">Cookies</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="footer__bottom">
+      <div class="container footer__bottom-inner">
+        <p>&copy; <span id="year"></span> QuickClone. This is an educational clone inspired by QuickBooks and is not affiliated with Intuit.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+</body>
+</html>
