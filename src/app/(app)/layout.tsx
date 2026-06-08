@@ -8,8 +8,8 @@ import {
   LayoutDashboard, FileText, Receipt, CreditCard, Building2,
   BarChart3, Users, BookOpen, ArrowLeftRight, Calculator,
   Globe, Settings, ChevronLeft, ChevronRight, Menu, X,
-  DollarSign, LogOut, Bell, Search, Plus, Shield, User,
-  Landmark
+  DollarSign, LogOut, Search, User,
+  Landmark, Package, Repeat, ClipboardList
 } from 'lucide-react';
 import clsx from 'clsx';
 
@@ -21,11 +21,14 @@ const navItems = [
   { name: 'Bank', href: '/bank', icon: Building2 },
   { name: 'Accounts', href: '/accounts', icon: BookOpen },
   { name: 'Journal', href: '/journal', icon: ArrowLeftRight },
-  { name: 'Reports', href: '/reports', icon: BarChart3 },
   { name: 'Payroll', href: '/payroll', icon: Landmark },
+  { name: 'Assets', href: '/assets', icon: Package },
+  { name: 'Recurring', href: '/recurring', icon: Repeat },
+  { name: 'Reports', href: '/reports', icon: BarChart3 },
   { name: 'Contacts', href: '/contacts', icon: Users },
   { name: 'Tax', href: '/taxes', icon: Calculator },
   { name: 'Currency', href: '/currencies', icon: Globe },
+  { name: 'Audit Trail', href: '/audit', icon: ClipboardList },
   { name: 'Settings', href: '/settings', icon: Settings },
 ];
 

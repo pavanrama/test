@@ -35,20 +35,45 @@ export function todayISO(): string {
 export function statusColor(status: string): string {
   const map: Record<string, string> = {
     paid: 'bg-emerald-100 text-emerald-700',
+    partial: 'bg-cyan-100 text-cyan-700',
     sent: 'bg-blue-100 text-blue-700',
     draft: 'bg-gray-100 text-gray-600',
     overdue: 'bg-red-100 text-red-700',
     cancelled: 'bg-gray-100 text-gray-500',
     approved: 'bg-emerald-100 text-emerald-700',
     received: 'bg-blue-100 text-blue-700',
+    submitted: 'bg-indigo-100 text-indigo-700',
     pending: 'bg-amber-100 text-amber-700',
     rejected: 'bg-red-100 text-red-700',
     posted: 'bg-emerald-100 text-emerald-700',
     void: 'bg-gray-100 text-gray-500',
     active: 'bg-emerald-100 text-emerald-700',
     inactive: 'bg-gray-100 text-gray-500',
+    disposed: 'bg-gray-100 text-gray-500',
+    fully_depreciated: 'bg-amber-100 text-amber-700',
+    ready: 'bg-blue-100 text-blue-700',
+    unpaid: 'bg-red-100 text-red-700',
+    processed: 'bg-blue-100 text-blue-700',
   };
   return map[status] || 'bg-gray-100 text-gray-600';
+}
+
+export function calcStraightLineDepreciation(cost: number, salvage: number, lifeYears: number): number {
+  if (lifeYears <= 0) return 0;
+  return Math.round(((cost - salvage) / lifeYears) * 100) / 100;
+}
+
+export function calcAccumulatedDepreciation(cost: number, salvage: number, lifeYears: number, purchaseDate: string): number {
+  const purchase = new Date(purchaseDate);
+  const now = new Date();
+  const yearsElapsed = (now.getTime() - purchase.getTime()) / (365.25 * 24 * 60 * 60 * 1000);
+  const annual = calcStraightLineDepreciation(cost, salvage, lifeYears);
+  const accum = Math.min(annual * yearsElapsed, cost - salvage);
+  return Math.round(accum * 100) / 100;
+}
+
+export function calcBookValue(cost: number, salvage: number, lifeYears: number, purchaseDate: string): number {
+  return Math.max(cost - calcAccumulatedDepreciation(cost, salvage, lifeYears, purchaseDate), salvage);
 }
 
 export const PAYROLL_TAX_RATES = {

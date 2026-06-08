@@ -4,8 +4,11 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import type {
   AppData, Company, User, Account, Invoice, Bill,
   Contact, Expense, BankAccount, BankTransaction,
-  JournalEntry, TaxRate, Employee, PayRun, PayrollTaxPayment
+  JournalEntry, TaxRate, Employee, PayRun, PayrollTaxPayment,
+  FixedAsset, RecurringTransaction, AuditEntry, AuditAction, Permission,
+  UserRole, Payment
 } from '@/lib/types';
+import { ROLE_PERMISSIONS } from '@/lib/types';
 import { uid, todayISO, DEFAULT_ACCOUNTS, PAYROLL_ACCOUNTS } from '@/lib/utils';
 
 const STORAGE_KEY = 'bookkeeper_data';
@@ -14,13 +17,27 @@ function loadData(): AppData {
   if (typeof window === 'undefined') return emptyData();
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return JSON.parse(raw);
-  } catch {}
+    if (raw) {
+      const d = JSON.parse(raw);
+      return {
+        ...emptyData(),
+        ...d,
+        fixedAssets: d.fixedAssets || [],
+        recurringTransactions: d.recurringTransactions || [],
+        auditLog: d.auditLog || [],
+      };
+    }
+  } catch { /* empty */ }
   return seedData();
 }
 
 function emptyData(): AppData {
-  return { companies: [], users: [], accounts: [], invoices: [], bills: [], contacts: [], expenses: [], bankAccounts: [], bankTransactions: [], journalEntries: [], taxRates: [], employees: [], payRuns: [], payrollTaxPayments: [] };
+  return {
+    companies: [], users: [], accounts: [], invoices: [], bills: [],
+    contacts: [], expenses: [], bankAccounts: [], bankTransactions: [],
+    journalEntries: [], taxRates: [], employees: [], payRuns: [],
+    payrollTaxPayments: [], fixedAssets: [], recurringTransactions: [], auditLog: [],
+  };
 }
 
 function seedData(): AppData {
@@ -32,27 +49,26 @@ function seedData(): AppData {
   return { ...emptyData(), users: [platformAdmin] };
 }
 
-interface AuthState {
-  user: User | null;
-  company: Company | null;
-}
+interface AuthState { user: User | null; company: Company | null; }
 
 interface AppContextType {
   data: AppData;
   auth: AuthState;
+  hasPermission: (perm: Permission) => boolean;
   login: (email: string, password: string) => string | null;
   logout: () => void;
   registerCompany: (company: Omit<Company, 'id' | 'createdAt' | 'isActive' | 'plan'>, admin: { name: string; email: string; password: string }) => string | null;
-  // Company-scoped CRUD
   addAccount: (a: Omit<Account, 'id' | 'companyId'>) => void;
   updateAccount: (id: string, updates: Partial<Account>) => void;
   deleteAccount: (id: string) => void;
-  addInvoice: (i: Omit<Invoice, 'id' | 'companyId' | 'createdAt'>) => void;
+  addInvoice: (i: Omit<Invoice, 'id' | 'companyId' | 'createdAt' | 'payments'>) => void;
   updateInvoice: (id: string, updates: Partial<Invoice>) => void;
   deleteInvoice: (id: string) => void;
-  addBill: (b: Omit<Bill, 'id' | 'companyId' | 'createdAt'>) => void;
+  recordInvoicePayment: (invoiceId: string, payment: Omit<Payment, 'id'>) => void;
+  addBill: (b: Omit<Bill, 'id' | 'companyId' | 'createdAt' | 'payments'>) => void;
   updateBill: (id: string, updates: Partial<Bill>) => void;
   deleteBill: (id: string) => void;
+  recordBillPayment: (billId: string, payment: Omit<Payment, 'id'>) => void;
   addContact: (c: Omit<Contact, 'id' | 'companyId' | 'createdAt'>) => void;
   updateContact: (id: string, updates: Partial<Contact>) => void;
   deleteContact: (id: string) => void;
@@ -78,14 +94,17 @@ interface AppContextType {
   addPayrollTaxPayment: (p: Omit<PayrollTaxPayment, 'id' | 'companyId' | 'createdAt'>) => void;
   updatePayrollTaxPayment: (id: string, updates: Partial<PayrollTaxPayment>) => void;
   deletePayrollTaxPayment: (id: string) => void;
+  addFixedAsset: (a: Omit<FixedAsset, 'id' | 'companyId' | 'createdAt'>) => void;
+  updateFixedAsset: (id: string, updates: Partial<FixedAsset>) => void;
+  deleteFixedAsset: (id: string) => void;
+  addRecurring: (r: Omit<RecurringTransaction, 'id' | 'companyId' | 'createdAt'>) => void;
+  updateRecurring: (id: string, updates: Partial<RecurringTransaction>) => void;
+  deleteRecurring: (id: string) => void;
   updateCompany: (id: string, updates: Partial<Company>) => void;
   addUser: (u: Omit<User, 'id' | 'createdAt'>) => void;
   updateUser: (id: string, updates: Partial<User>) => void;
   deleteUser: (id: string) => void;
-  // Scoped getters
-  myEmployees: () => Employee[];
-  myPayRuns: () => PayRun[];
-  myPayrollTaxPayments: () => PayrollTaxPayment[];
+  logAudit: (action: AuditAction, entity: string, entityId: string, entityLabel: string, oldValue?: string, newValue?: string) => void;
   myAccounts: () => Account[];
   myInvoices: () => Invoice[];
   myBills: () => Bill[];
@@ -95,6 +114,12 @@ interface AppContextType {
   myBankTransactions: () => BankTransaction[];
   myJournalEntries: () => JournalEntry[];
   myTaxRates: () => TaxRate[];
+  myEmployees: () => Employee[];
+  myPayRuns: () => PayRun[];
+  myPayrollTaxPayments: () => PayrollTaxPayment[];
+  myFixedAssets: () => FixedAsset[];
+  myRecurring: () => RecurringTransaction[];
+  myAuditLog: () => AuditEntry[];
   myUsers: () => User[];
   allCompanies: () => Company[];
 }
@@ -118,7 +143,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           const company = d.companies.find(c => c.id === user.companyId) || null;
           setAuth({ user, company });
         }
-      } catch {}
+      } catch { /* empty */ }
     }
     setLoaded(true);
   }, []);
@@ -130,6 +155,22 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const cid = auth.company?.id || '';
 
+  const hasPermission = (perm: Permission): boolean => {
+    if (!auth.user) return false;
+    if (auth.user.role === 'super_admin' || auth.user.role === 'admin') return true;
+    return ROLE_PERMISSIONS[auth.user.role]?.includes(perm) ?? false;
+  };
+
+  const logAuditEntry = (d: AppData, action: AuditAction, entity: string, entityId: string, entityLabel: string, oldValue?: string, newValue?: string): AppData => {
+    if (!auth.user) return d;
+    const entry: AuditEntry = {
+      id: uid(), companyId: cid, userId: auth.user.id, userName: auth.user.name,
+      action, entity, entityId, entityLabel, oldValue, newValue,
+      timestamp: new Date().toISOString(),
+    };
+    return { ...d, auditLog: [...d.auditLog, entry] };
+  };
+
   const login = (email: string, password: string): string | null => {
     const user = data.users.find(u => u.email === email && u.password === password && u.isActive);
     if (!user) return 'Invalid email or password';
@@ -140,10 +181,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     return null;
   };
 
-  const logout = () => {
-    setAuth({ user: null, company: null });
-    sessionStorage.removeItem('bookkeeper_auth');
-  };
+  const logout = () => { setAuth({ user: null, company: null }); sessionStorage.removeItem('bookkeeper_auth'); };
 
   const registerCompany = (
     companyData: Omit<Company, 'id' | 'createdAt' | 'isActive' | 'plan'>,
@@ -151,61 +189,86 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   ): string | null => {
     if (data.users.find(u => u.email === admin.email)) return 'Email already registered';
     const companyId = uid();
-    const newCompany: Company = {
-      ...companyData, id: companyId, plan: 'free', isActive: true, createdAt: todayISO(),
-    };
-    const newUser: User = {
-      id: uid(), companyId, name: admin.name, email: admin.email,
-      password: admin.password, role: 'admin', isActive: true, createdAt: todayISO(),
-    };
-    const allDefaultAccounts = [...DEFAULT_ACCOUNTS, ...PAYROLL_ACCOUNTS];
+    const newCompany: Company = { ...companyData, id: companyId, plan: 'free', isActive: true, createdAt: todayISO() };
+    const newUser: User = { id: uid(), companyId, name: admin.name, email: admin.email, password: admin.password, role: 'admin', isActive: true, createdAt: todayISO() };
+    const allDefaultAccounts = [...DEFAULT_ACCOUNTS, ...PAYROLL_ACCOUNTS,
+      { code: '1510', name: 'Accumulated Depreciation', type: 'asset' as const, subType: 'Fixed Asset', description: 'Contra-asset for depreciation' },
+    ];
     const defaultAccounts: Account[] = allDefaultAccounts.map(a => ({
-      id: uid(), companyId, code: a.code, name: a.name, type: a.type,
-      subType: a.subType, balance: 0, currency: companyData.baseCurrency || 'USD',
-      description: a.description, isActive: true,
+      id: uid(), companyId, code: a.code, name: a.name, type: a.type, subType: a.subType, balance: 0, currency: companyData.baseCurrency || 'USD', description: a.description, isActive: true,
     }));
-    const defaultTax: TaxRate = {
-      id: uid(), companyId, name: 'Standard Tax', rate: 10,
-      type: 'sales_tax', region: companyData.country || 'US', isDefault: true, isActive: true,
-    };
-    const next = {
-      ...data,
-      companies: [...data.companies, newCompany],
-      users: [...data.users, newUser],
-      accounts: [...data.accounts, ...defaultAccounts],
-      taxRates: [...data.taxRates, defaultTax],
-    };
+    const defaultTax: TaxRate = { id: uid(), companyId, name: 'Standard Tax', rate: 10, type: 'sales_tax', region: companyData.country || 'US', isDefault: true, isActive: true };
+    const next = { ...data, companies: [...data.companies, newCompany], users: [...data.users, newUser], accounts: [...data.accounts, ...defaultAccounts], taxRates: [...data.taxRates, defaultTax] };
     persist(next);
     setAuth({ user: newUser, company: newCompany });
     sessionStorage.setItem('bookkeeper_auth', JSON.stringify({ userId: newUser.id }));
     return null;
   };
 
-  // Generic helpers
   /* eslint-disable @typescript-eslint/no-explicit-any */
   const addEntity = (key: keyof AppData, entity: any) => {
-    const arr = data[key] as any[];
-    persist({ ...data, [key]: [...arr, entity] });
+    let next = { ...data, [key]: [...(data[key] as any[]), entity] };
+    next = logAuditEntry(next, 'create', key, entity.id, entity.name || entity.number || entity.id);
+    persist(next);
   };
   const updateEntity = (key: keyof AppData, id: string, updates: any) => {
-    const arr = data[key] as any[];
-    persist({ ...data, [key]: arr.map((e: any) => e.id === id ? { ...e, ...updates } : e) });
+    const existing = (data[key] as any[]).find((e: any) => e.id === id);
+    let next = { ...data, [key]: (data[key] as any[]).map((e: any) => e.id === id ? { ...e, ...updates } : e) };
+    const action: AuditAction = updates.status === 'approved' ? 'approve' : updates.status === 'rejected' ? 'reject' :
+      updates.status === 'posted' ? 'post' : updates.status === 'void' ? 'void' : 'edit';
+    next = logAuditEntry(next, action, key, id, existing?.name || existing?.number || id,
+      existing?.status, updates.status || undefined);
+    persist(next);
   };
   const deleteEntity = (key: keyof AppData, id: string) => {
-    const arr = data[key] as any[];
-    persist({ ...data, [key]: arr.filter((e: any) => e.id !== id) });
+    const existing = (data[key] as any[]).find((e: any) => e.id === id);
+    let next = { ...data, [key]: (data[key] as any[]).filter((e: any) => e.id !== id) };
+    next = logAuditEntry(next, 'delete', key, id, existing?.name || existing?.number || id);
+    persist(next);
   };
   /* eslint-enable @typescript-eslint/no-explicit-any */
 
+  const recordInvoicePayment = (invoiceId: string, payment: Omit<Payment, 'id'>) => {
+    const inv = data.invoices.find(i => i.id === invoiceId);
+    if (!inv) return;
+    const p: Payment = { ...payment, id: uid() };
+    const payments = [...(inv.payments || []), p];
+    const amountPaid = payments.reduce((s, pp) => s + pp.amount, 0);
+    const status = amountPaid >= inv.total ? 'paid' : amountPaid > 0 ? 'partial' : inv.status;
+    let next = { ...data, invoices: data.invoices.map(i => i.id === invoiceId ? { ...i, payments, amountPaid, status } : i) };
+    next = logAuditEntry(next, 'payment', 'invoices', invoiceId, inv.number, undefined, `${payment.amount}`);
+    persist(next);
+  };
+
+  const recordBillPayment = (billId: string, payment: Omit<Payment, 'id'>) => {
+    const bill = data.bills.find(b => b.id === billId);
+    if (!bill) return;
+    const p: Payment = { ...payment, id: uid() };
+    const payments = [...(bill.payments || []), p];
+    const amountPaid = payments.reduce((s, pp) => s + pp.amount, 0);
+    const status = amountPaid >= bill.total ? 'paid' : amountPaid > 0 ? 'partial' : bill.status;
+    let next = { ...data, bills: data.bills.map(b => b.id === billId ? { ...b, payments, amountPaid, status } : b) };
+    next = logAuditEntry(next, 'payment', 'bills', billId, bill.number, undefined, `${payment.amount}`);
+    persist(next);
+  };
+
+  const logAudit = (action: AuditAction, entity: string, entityId: string, entityLabel: string, oldValue?: string, newValue?: string) => {
+    const next = logAuditEntry(data, action, entity, entityId, entityLabel, oldValue, newValue);
+    persist(next);
+  };
+
   const ctx: AppContextType = {
-    data, auth, login, logout, registerCompany,
+    data, auth, hasPermission, login, logout, registerCompany,
+    logAudit,
+    recordInvoicePayment,
+    recordBillPayment,
     addAccount: (a) => addEntity('accounts', { ...a, id: uid(), companyId: cid } as Account),
     updateAccount: (id, u) => updateEntity('accounts', id, u),
     deleteAccount: (id) => deleteEntity('accounts', id),
-    addInvoice: (i) => addEntity('invoices', { ...i, id: uid(), companyId: cid, createdAt: todayISO() } as Invoice),
+    addInvoice: (i) => addEntity('invoices', { ...i, id: uid(), companyId: cid, createdAt: todayISO(), payments: [] } as Invoice),
     updateInvoice: (id, u) => updateEntity('invoices', id, u),
     deleteInvoice: (id) => deleteEntity('invoices', id),
-    addBill: (b) => addEntity('bills', { ...b, id: uid(), companyId: cid, createdAt: todayISO() } as Bill),
+    addBill: (b) => addEntity('bills', { ...b, id: uid(), companyId: cid, createdAt: todayISO(), payments: [] } as Bill),
     updateBill: (id, u) => updateEntity('bills', id, u),
     deleteBill: (id) => deleteEntity('bills', id),
     addContact: (c) => addEntity('contacts', { ...c, id: uid(), companyId: cid, createdAt: todayISO() } as Contact),
@@ -233,13 +296,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     addPayrollTaxPayment: (p) => addEntity('payrollTaxPayments', { ...p, id: uid(), companyId: cid, createdAt: todayISO() } as PayrollTaxPayment),
     updatePayrollTaxPayment: (id, u) => updateEntity('payrollTaxPayments', id, u),
     deletePayrollTaxPayment: (id) => deleteEntity('payrollTaxPayments', id),
+    addFixedAsset: (a) => addEntity('fixedAssets', { ...a, id: uid(), companyId: cid, createdAt: todayISO() } as FixedAsset),
+    updateFixedAsset: (id, u) => updateEntity('fixedAssets', id, u),
+    deleteFixedAsset: (id) => deleteEntity('fixedAssets', id),
+    addRecurring: (r) => addEntity('recurringTransactions', { ...r, id: uid(), companyId: cid, createdAt: todayISO() } as RecurringTransaction),
+    updateRecurring: (id, u) => updateEntity('recurringTransactions', id, u),
+    deleteRecurring: (id) => deleteEntity('recurringTransactions', id),
     updateCompany: (id, u) => updateEntity('companies', id, u),
     addUser: (u) => addEntity('users', { ...u, id: uid(), createdAt: todayISO() } as User),
     updateUser: (id, u) => updateEntity('users', id, u),
     deleteUser: (id) => deleteEntity('users', id),
-    myEmployees: () => data.employees.filter(e => e.companyId === cid),
-    myPayRuns: () => data.payRuns.filter(p => p.companyId === cid),
-    myPayrollTaxPayments: () => data.payrollTaxPayments.filter(p => p.companyId === cid),
     myAccounts: () => data.accounts.filter(a => a.companyId === cid),
     myInvoices: () => data.invoices.filter(i => i.companyId === cid),
     myBills: () => data.bills.filter(b => b.companyId === cid),
@@ -249,6 +315,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     myBankTransactions: () => data.bankTransactions.filter(t => t.companyId === cid),
     myJournalEntries: () => data.journalEntries.filter(j => j.companyId === cid),
     myTaxRates: () => data.taxRates.filter(t => t.companyId === cid),
+    myEmployees: () => data.employees.filter(e => e.companyId === cid),
+    myPayRuns: () => data.payRuns.filter(p => p.companyId === cid),
+    myPayrollTaxPayments: () => data.payrollTaxPayments.filter(p => p.companyId === cid),
+    myFixedAssets: () => data.fixedAssets.filter(a => a.companyId === cid),
+    myRecurring: () => data.recurringTransactions.filter(r => r.companyId === cid),
+    myAuditLog: () => data.auditLog.filter(a => a.companyId === cid),
     myUsers: () => data.users.filter(u => u.companyId === cid),
     allCompanies: () => data.companies,
   };

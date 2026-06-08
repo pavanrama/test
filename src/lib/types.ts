@@ -1,3 +1,71 @@
+export type UserRole = 'super_admin' | 'admin' | 'accountant' | 'payroll_manager' | 'ap_clerk' | 'ar_clerk' | 'viewer';
+
+export const ROLE_LABELS: Record<UserRole, string> = {
+  super_admin: 'Super Admin', admin: 'Admin', accountant: 'Accountant',
+  payroll_manager: 'Payroll Manager', ap_clerk: 'AP Clerk', ar_clerk: 'AR Clerk', viewer: 'Viewer',
+};
+
+export type Permission =
+  | 'invoices.view' | 'invoices.create' | 'invoices.edit' | 'invoices.delete' | 'invoices.approve'
+  | 'bills.view' | 'bills.create' | 'bills.edit' | 'bills.delete' | 'bills.approve'
+  | 'expenses.view' | 'expenses.create' | 'expenses.edit' | 'expenses.approve'
+  | 'bank.view' | 'bank.reconcile'
+  | 'accounts.view' | 'accounts.edit'
+  | 'journal.view' | 'journal.create' | 'journal.post'
+  | 'contacts.view' | 'contacts.edit'
+  | 'payroll.view' | 'payroll.run' | 'payroll.approve'
+  | 'reports.view'
+  | 'assets.view' | 'assets.edit'
+  | 'settings.view' | 'settings.edit'
+  | 'audit.view'
+  | 'recurring.view' | 'recurring.edit'
+  | 'periods.close';
+
+export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
+  super_admin: [],
+  admin: [
+    'invoices.view','invoices.create','invoices.edit','invoices.delete','invoices.approve',
+    'bills.view','bills.create','bills.edit','bills.delete','bills.approve',
+    'expenses.view','expenses.create','expenses.edit','expenses.approve',
+    'bank.view','bank.reconcile',
+    'accounts.view','accounts.edit',
+    'journal.view','journal.create','journal.post',
+    'contacts.view','contacts.edit',
+    'payroll.view','payroll.run','payroll.approve',
+    'reports.view','assets.view','assets.edit',
+    'settings.view','settings.edit','audit.view',
+    'recurring.view','recurring.edit','periods.close',
+  ],
+  accountant: [
+    'invoices.view','invoices.create','invoices.edit','invoices.approve',
+    'bills.view','bills.create','bills.edit','bills.approve',
+    'expenses.view','expenses.create','expenses.edit','expenses.approve',
+    'bank.view','bank.reconcile',
+    'accounts.view','accounts.edit',
+    'journal.view','journal.create','journal.post',
+    'contacts.view','contacts.edit',
+    'payroll.view','reports.view','assets.view','assets.edit',
+    'audit.view','recurring.view','recurring.edit','periods.close',
+  ],
+  payroll_manager: [
+    'payroll.view','payroll.run','payroll.approve',
+    'reports.view','contacts.view',
+  ],
+  ap_clerk: [
+    'bills.view','bills.create','bills.edit',
+    'expenses.view','expenses.create','expenses.edit',
+    'contacts.view','contacts.edit','reports.view',
+  ],
+  ar_clerk: [
+    'invoices.view','invoices.create','invoices.edit',
+    'contacts.view','contacts.edit','reports.view',
+  ],
+  viewer: [
+    'invoices.view','bills.view','expenses.view','bank.view','accounts.view',
+    'journal.view','contacts.view','reports.view','assets.view','audit.view',
+  ],
+};
+
 export interface Company {
   id: string;
   name: string;
@@ -16,6 +84,7 @@ export interface Company {
   isActive: boolean;
   createdAt: string;
   logo?: string;
+  lockedPeriodEnd?: string;
 }
 
 export interface User {
@@ -24,7 +93,7 @@ export interface User {
   name: string;
   email: string;
   password: string;
-  role: 'super_admin' | 'admin' | 'accountant' | 'viewer';
+  role: UserRole;
   isActive: boolean;
   createdAt: string;
 }
@@ -56,10 +125,11 @@ export interface Invoice {
   taxAmount: number;
   total: number;
   amountPaid: number;
-  status: 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled';
+  status: 'draft' | 'sent' | 'paid' | 'partial' | 'overdue' | 'cancelled';
   notes: string;
   currency: string;
   createdAt: string;
+  payments: Payment[];
 }
 
 export interface Bill {
@@ -75,10 +145,23 @@ export interface Bill {
   taxAmount: number;
   total: number;
   amountPaid: number;
-  status: 'draft' | 'received' | 'approved' | 'paid' | 'overdue';
+  status: 'draft' | 'submitted' | 'approved' | 'rejected' | 'paid' | 'partial' | 'overdue';
   category: string;
   currency: string;
   createdAt: string;
+  payments: Payment[];
+  notes?: string;
+  approvedBy?: string;
+  approvedAt?: string;
+}
+
+export interface Payment {
+  id: string;
+  date: string;
+  amount: number;
+  method: string;
+  reference: string;
+  note: string;
 }
 
 export interface LineItem {
@@ -117,7 +200,7 @@ export interface Expense {
   amount: number;
   taxAmount: number;
   paymentMethod: string;
-  status: 'pending' | 'approved' | 'rejected';
+  status: 'draft' | 'submitted' | 'approved' | 'rejected' | 'pending';
   currency: string;
   createdAt: string;
 }
@@ -153,7 +236,7 @@ export interface JournalEntry {
   description: string;
   reference: string;
   lines: JournalLine[];
-  status: 'draft' | 'posted' | 'void';
+  status: 'draft' | 'submitted' | 'approved' | 'rejected' | 'posted' | 'void';
   createdAt: string;
 }
 
@@ -245,6 +328,55 @@ export interface PayrollTaxPayment {
   createdAt: string;
 }
 
+export interface FixedAsset {
+  id: string;
+  companyId: string;
+  name: string;
+  assetNumber: string;
+  category: string;
+  purchaseDate: string;
+  costBasis: number;
+  salvageValue: number;
+  usefulLifeYears: number;
+  depreciationMethod: 'straight_line' | 'declining_balance';
+  accountId: string;
+  depExpenseAccountId: string;
+  accumDepAccountId: string;
+  status: 'active' | 'disposed' | 'fully_depreciated';
+  description: string;
+  createdAt: string;
+}
+
+export interface RecurringTransaction {
+  id: string;
+  companyId: string;
+  type: 'invoice' | 'bill' | 'expense' | 'journal';
+  name: string;
+  frequency: 'weekly' | 'biweekly' | 'monthly' | 'quarterly' | 'annually';
+  nextDate: string;
+  endDate?: string;
+  isActive: boolean;
+  templateData: string;
+  lastGenerated?: string;
+  createdAt: string;
+}
+
+export type AuditAction = 'create' | 'edit' | 'delete' | 'approve' | 'reject' | 'post' | 'void' | 'payment' | 'submit';
+
+export interface AuditEntry {
+  id: string;
+  companyId: string;
+  userId: string;
+  userName: string;
+  action: AuditAction;
+  entity: string;
+  entityId: string;
+  entityLabel: string;
+  oldValue?: string;
+  newValue?: string;
+  timestamp: string;
+}
+
 export interface AppData {
   companies: Company[];
   users: User[];
@@ -260,4 +392,7 @@ export interface AppData {
   employees: Employee[];
   payRuns: PayRun[];
   payrollTaxPayments: PayrollTaxPayment[];
+  fixedAssets: FixedAsset[];
+  recurringTransactions: RecurringTransaction[];
+  auditLog: AuditEntry[];
 }
